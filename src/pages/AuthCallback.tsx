@@ -45,6 +45,7 @@ const AuthCallback: React.FC = () => {
   };
 
   useEffect(() => {
+    let isCancelled = false;
     const handleEmailVerification = async () => {
       try {
         const supabase = config.supabaseClient;
@@ -120,6 +121,8 @@ const AuthCallback: React.FC = () => {
 
         const sessionSnapshot = await revalidateSession();
 
+        if (isCancelled) return;
+
         if (sessionSnapshot.status !== 'authenticated' || !sessionSnapshot.user) {
           setVerificationStatus('error');
           setErrorMessage('No active session found. Please try signing in again.');
@@ -133,6 +136,8 @@ const AuthCallback: React.FC = () => {
           .select('is_completed, current_step')
           .eq('user_id', user.id)
           .maybeSingle();
+
+          if (isCancelled) return;
 
         console.info('[Hushh][AuthCallback] Session restored', {
           userId: user.id,
@@ -150,6 +155,7 @@ const AuthCallback: React.FC = () => {
           navigate(getRedirectDestination(hasCompletedOnboarding));
         }, 1200);
       } catch (err) {
+        if (isCancelled) return;
         console.error('Verification error:', err);
         setVerificationStatus('error');
         setErrorMessage('An unexpected error occurred');
@@ -159,6 +165,7 @@ const AuthCallback: React.FC = () => {
     handleEmailVerification();
 
     return () => {
+      isCancelled = true;
       if (redirectTimeoutRef.current) {
         clearTimeout(redirectTimeoutRef.current);
         redirectTimeoutRef.current = null;
