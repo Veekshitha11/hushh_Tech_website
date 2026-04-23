@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Box, Container, Heading, Text, Spinner, Button, Flex, Icon, Alert, AlertIcon } from '@chakra-ui/react';
 import { CheckCircle, AlertTriangle } from 'lucide-react';
@@ -17,6 +17,7 @@ const AuthCallback: React.FC = () => {
   const { revalidateSession } = useAuthSession();
   const [verificationStatus, setVerificationStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const redirectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Get custom redirect from URL param (for Hushh AI and other modules)
   const redirectParam = searchParams.get('redirect');
@@ -141,7 +142,10 @@ const AuthCallback: React.FC = () => {
 
         queueWelcomeToast(user.id);
         setVerificationStatus('success');
-        setTimeout(() => {
+        if (redirectTimeoutRef.current) {
+          clearTimeout(redirectTimeoutRef.current);
+        }
+        redirectTimeoutRef.current = setTimeout(() => {
           const hasCompletedOnboarding = onboardingData?.is_completed ?? false;
           navigate(getRedirectDestination(hasCompletedOnboarding));
         }, 1200);
@@ -153,6 +157,13 @@ const AuthCallback: React.FC = () => {
     };
 
     handleEmailVerification();
+
+    return () => {
+      if (redirectTimeoutRef.current) {
+        clearTimeout(redirectTimeoutRef.current);
+        redirectTimeoutRef.current = null;
+      }
+    };
   }, [searchParams, navigate, revalidateSession]);
 
   const redirectToLogin = () => {

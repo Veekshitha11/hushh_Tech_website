@@ -135,4 +135,33 @@ describe("AuthCallback", () => {
 
     expect(navigateMock).toHaveBeenCalledWith("/delete-account");
   });
+
+  it("does not navigate from a stale redirect timer after unmount", async () => {
+    await act(async () => {
+      root.render(
+        React.createElement(
+          ChakraProvider,
+          { theme },
+          React.createElement(
+            MemoryRouter,
+            {
+              initialEntries: ["/auth/callback?code=fresh-code&redirect=%2Fdelete-account"],
+            },
+            React.createElement(AuthCallback)
+          )
+        )
+      );
+    });
+    await flush();
+
+    await act(async () => {
+      root.unmount();
+    });
+
+    await act(async () => {
+      vi.runAllTimers();
+    });
+
+    expect(navigateMock).not.toHaveBeenCalled();
+  });
 });
