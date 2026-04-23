@@ -459,7 +459,7 @@ export const signalDecisionReport = async (params: {
   amountInstantlyAvailable?: number;
 }) => {
   const token = await getUserAccessToken();
-  const res = await fetch(`${SUPABASE_URL}/signal-decision-report`, {
+  const res = await fetch(`${SUPABASE_FUNCTIONS_URL}/signal-decision-report`, {
     method: 'POST', headers: getHeaders(token),
     body: JSON.stringify({
       client_transaction_id: params.clientTransactionId,
@@ -484,7 +484,7 @@ export const signalReturnReport = async (params: {
   returnedAt?: string;
 }) => {
   const token = await getUserAccessToken();
-  const res = await fetch(`${SUPABASE_URL}/signal-return-report`, {
+  const res = await fetch(`${SUPABASE_FUNCTIONS_URL}/signal-return-report`, {
     method: 'POST', headers: getHeaders(token),
     body: JSON.stringify({
       client_transaction_id: params.clientTransactionId,
