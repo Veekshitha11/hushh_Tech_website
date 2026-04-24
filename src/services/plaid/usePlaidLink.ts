@@ -547,6 +547,10 @@ export const usePlaidLinkHook = (userId: string, userEmail?: string): UsePlaidLi
   }, [ready, open]);
 
   const retry = useCallback(() => {
+    if (assetPollRef.current) {
+      clearInterval(assetPollRef.current);
+      assetPollRef.current = null;
+    }
     clearPersistedState();
     setState(defaultState());
     accessTokenRef.current = null;
