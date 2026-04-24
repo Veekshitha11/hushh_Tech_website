@@ -146,17 +146,10 @@ const InvestorProfilePage: React.FC<NDARequestModalProps> = ({
     if (isSubmittingRef.current || isSubmitting) {
       return;
     }
+    isSubmittingRef.current = true;
+    setIsSubmitting(true);
 
-    // Ensure Step 1 was valid (though goToStep should have caught this)
-    if (!validateStep1() && currentStep === 1) { // Should not happen if goToStep(2) was used
-        toast({ title: "Error", description: "Please complete investor profile first.", status: "error" });
-        setCurrentStep(1); // Force back to step 1
-        return;
-    }
-    if (!ndaConfirmed || !ndaTermsAccepted) {
-        toast({ title: "NDA Acceptance Required", description: "Please confirm and accept NDA terms.", status: "warning" });
-        return;
-    }
+    
 
     console.log("Submitting NDA Request with metadata:", metadata);
     const formattedMetadata = { ...metadata };
@@ -170,9 +163,19 @@ const InvestorProfilePage: React.FC<NDARequestModalProps> = ({
         formattedMetadata.contact_person_telephone
       );
     }
-    isSubmittingRef.current = true;
-    setIsSubmitting(true);
+    
     try {
+      
+      // Ensure Step 1 was valid (though goToStep should have caught this)
+    if (!validateStep1() && currentStep === 1) { // Should not happen if goToStep(2) was used
+        toast({ title: "Error", description: "Please complete investor profile first.", status: "error" });
+        setCurrentStep(1); // Force back to step 1
+        return;
+    }
+    if (!ndaConfirmed || !ndaTermsAccepted) {
+        toast({ title: "NDA Acceptance Required", description: "Please confirm and accept NDA terms.", status: "warning" });
+        return;
+    }
       const resData = await requestFileAccess(session.access_token, {
         investorType,
         metadata: JSON.stringify(formattedMetadata),
