@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   Box,
   Container,
@@ -65,6 +65,8 @@ const InvestorProfilePage: React.FC<NDARequestModalProps> = ({
   const [formErrors, setFormErrors] = useState<any>({});
   const [ndaConfirmed, setNdaConfirmed] = useState(false);
   const [ndaTermsAccepted, setNdaTermsAccepted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const isSubmittingRef = useRef(false);
   const [showNdaDocModal, setShowNdaDocModal] = useState(false);
   const toast = useToast();
 
@@ -141,6 +143,10 @@ const InvestorProfilePage: React.FC<NDARequestModalProps> = ({
   };
 
   const handleSubmit = async () => {
+    if (isSubmittingRef.current || isSubmitting) {
+      return;
+    }
+
     // Ensure Step 1 was valid (though goToStep should have caught this)
     if (!validateStep1() && currentStep === 1) { // Should not happen if goToStep(2) was used
         toast({ title: "Error", description: "Please complete investor profile first.", status: "error" });
@@ -164,6 +170,8 @@ const InvestorProfilePage: React.FC<NDARequestModalProps> = ({
         formattedMetadata.contact_person_telephone
       );
     }
+    isSubmittingRef.current = true;
+    setIsSubmitting(true);
     try {
       const resData = await requestFileAccess(session.access_token, {
         investorType,
@@ -214,6 +222,9 @@ const InvestorProfilePage: React.FC<NDARequestModalProps> = ({
         duration: 4000,
         isClosable: true,
       });
+    } finally {
+      isSubmittingRef.current = false;
+      setIsSubmitting(false);
     }
   };
 
@@ -560,7 +571,7 @@ const InvestorProfilePage: React.FC<NDARequestModalProps> = ({
           <Button onClick={() => goToStep(1)} size="md" width="40%" py={6} borderRadius="md" bg="transparent" color="black" border="1px solid">
             Back to Profile
           </Button>
-          <Button onClick={handleSubmit} background="linear-gradient(to right, #00A9E0, #6DD3EF)" _hover={{ background: "linear-gradient(to right, #0AADBC, #1CADBC)" }} color={'white'} size="md" width="60%" py={6} borderRadius="md" isDisabled={!ndaConfirmed || !ndaTermsAccepted}>
+          <Button onClick={handleSubmit} background="linear-gradient(to right, #00A9E0, #6DD3EF)" _hover={{ background: "linear-gradient(to right, #0AADBC, #1CADBC)" }} color={'white'} size="md" width="60%" py={6} borderRadius="md" isDisabled={!ndaConfirmed || !ndaTermsAccepted || isSubmitting}>
             Submit NDA & Investor Profile
           </Button>
         </HStack>
