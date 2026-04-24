@@ -186,13 +186,17 @@ export function InvestorChatWidget({ slug, investorName }: { slug: string; inves
     const timestamp = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
     
     const userMsg: Message = { role: 'user', content: text, timestamp };
+    // Build the API history from a local snapshot so it includes
+    // the just-sent message regardless of React state timing.
+    const history = [
+      ...messages.map(m => ({ role: m.role, content: m.content })),
+      { role: userMsg.role, content: userMsg.content },
+    ];
     setMessages(prev => [...prev, userMsg]);
     setInput('');
     setLoading(true);
     
     try {
-      const history = messages.map(m => ({ role: m.role, content: m.content }));
-      
       const res = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/investor-chat`,
         {
